@@ -24,9 +24,9 @@ static PermissiveResearchDatabase *mainDatabase = nil;
     if (mainDatabase == nil) {
         static dispatch_once_t onceToken;
         dispatch_once(&onceToken, ^{
-			mainDatabase = [[self alloc] init];
+            mainDatabase = [[self alloc] init];
         });
-	}
+    }
     
     return mainDatabase;
 }
@@ -169,7 +169,7 @@ static PermissiveResearchDatabase *mainDatabase = nil;
     NSAssert(contexts.count < 1, @"What? multiple managedObjectContext");
     
     NSManagedObjectContext *firstContext = [contexts firstObject];
-
+    
     //Need to check concurrency type?
     [firstContext performBlockAndWait:^{
         [objs enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
@@ -228,6 +228,31 @@ static PermissiveResearchDatabase *mainDatabase = nil;
     }];
 }
 
+#pragma mark - Add core data objects with custom (key, value) pairs
+
+- (void)addManagedObject:(NSManagedObject *)obj forKey:(NSString *)key withValue:(NSString *)value
+{
+    [self addManagedObject:obj forKey:key withValue:value isAlreadQueueProtected:NO];
+}
+
+- (void)addManagedObject:(NSManagedObject *)obj forKey:(NSString *)key withValue:(NSString *)value isAlreadQueueProtected:(BOOL)isAlreadQueueProtected
+{
+    if (NO == isAlreadQueueProtected) {
+        [obj.managedObjectContext performBlockAndWait:^{
+            [self addManagedObject:obj forKey:key withValue:value isAlreadQueueProtected:YES];
+        }];
+        return;
+    } else {
+        PermissiveCoreDataObject *scoringObj = [PermissiveCoreDataObject new];
+        scoringObj.flag = strdup([value UTF8String]);  //duplicate char* to be not constant
+        scoringObj.flagLenght = key.length;
+        scoringObj.objectID = [obj objectID];
+        [self.elements addObject:scoringObj];
+        
+        [self addSegmentsForKey:key forObject:scoringObj];
+    }
+}
+
 
 #pragma mark - Add segments
 
@@ -266,7 +291,7 @@ static PermissiveResearchDatabase *mainDatabase = nil;
 - (void)searchString:(NSString *)searchedString withOperation:(ScoringOperationType)operationType
 {
     [[ScoringOperationQueue mainQueue] cancelAllOperations];
-
+    
     ExactScoringOperation *operation;
     if (operationType == ScoringOperationTypeExact) {
         operation = [ExactScoringOperation new];

@@ -66,6 +66,8 @@ A similarity matrix is use to tolerate errors.
 - (void)addManagedObjects:(NSArray *)objs forKey:(NSString *)key;
 - (void)addManagedObjects:(NSArray *)objs forKeys:(NSArray *)keys;
 - (void)addManagedObjects:(NSArray *)objs forKeyPaths:(NSArray *)KeyPaths;
+
+- (void)addManagedObject:(NSManagedObject *)obj forKey:(NSString *)key withValue:(NSString *)value;
 ```
 
 Example :
