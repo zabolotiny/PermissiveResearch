@@ -125,7 +125,7 @@ static PermissiveResearchDatabase *mainDatabase = nil;
     PermissiveObject *scoringObj = [PermissiveObject new];
     scoringObj.refencedObject = obj;
     scoringObj.flag = strdup([key UTF8String]);  //duplicate char* to be not constant
-    scoringObj.flagLenght = key.length;
+    scoringObj.flagLength = key.length;
     [self.elements addObject:scoringObj];
     
     [self addSegmentsForKey:key forObject:scoringObj];
@@ -188,7 +188,7 @@ static PermissiveResearchDatabase *mainDatabase = nil;
     } else {
         PermissiveCoreDataObject *scoringObj = [PermissiveCoreDataObject new];
         scoringObj.flag = strdup([[obj valueForKey:key] UTF8String]);  //duplicate char* to be not constant
-        scoringObj.flagLenght = key.length;
+        scoringObj.flagLength = key.length;
         scoringObj.objectID = [obj objectID];
         [self.elements addObject:scoringObj];
         
@@ -245,7 +245,7 @@ static PermissiveResearchDatabase *mainDatabase = nil;
     } else {
         PermissiveCoreDataObject *scoringObj = [PermissiveCoreDataObject new];
         scoringObj.flag = strdup([value UTF8String]);  //duplicate char* to be not constant
-        scoringObj.flagLenght = key.length;
+        scoringObj.flagLength = key.length;
         scoringObj.objectID = [obj objectID];
         [self.elements addObject:scoringObj];
         
@@ -258,14 +258,14 @@ static PermissiveResearchDatabase *mainDatabase = nil;
 
 - (void)addSegmentsForKey:(NSString *)key forObject:(id)obj
 {
-    //NSAssert(key.length>ScoringSegmentLenght, @"key.length>ScoringSegmentLenght");
-    if (key.length < ScoringSegmentLenght) {
+    //NSAssert(key.length>ScoringSegmentLength, @"key.length>ScoringSegmentLength");
+    if (key.length < ScoringSegmentLength) {
         [self addSegment:key forObject:obj];
         return;
     }
     
-    for (int i = 0; i < key.length - ScoringSegmentLenght; i++) {
-        NSString *segment = [key substringWithRange:NSMakeRange(i, ScoringSegmentLenght)];
+    for (int i = 0; i < key.length - ScoringSegmentLength; i++) {
+        NSString *segment = [key substringWithRange:NSMakeRange(i, ScoringSegmentLength)];
         [self addSegment:segment forObject:obj];
     }
 }

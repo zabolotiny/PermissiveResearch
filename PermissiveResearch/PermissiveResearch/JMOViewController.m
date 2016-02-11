@@ -20,7 +20,7 @@
 
 @interface JMOViewController () <UITableViewDataSource,UITextFieldDelegate, PermissiveResearchDatasource, PermissiveResearchDelegate>
 @property (strong, nonatomic) NSMutableArray *allElements;
-@property (strong, nonatomic) NSArray *findedElements;
+@property (strong, nonatomic) NSArray *foundElements;
 @property (strong, nonatomic) NSArray *searchedList;
 
 @property (weak, nonatomic) IBOutlet UITextField *textField;
@@ -48,14 +48,14 @@
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
 {
-    return self.findedElements.count;
+    return self.foundElements.count;
 }
 
 - (JMOTableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
 {
     JMOTableViewCell *cell = [self.tableView dequeueReusableCellWithIdentifier:@"JMOTableViewCell"];
     
-    id obj = [self.findedElements objectAtIndex:indexPath.row];
+    id obj = [self.foundElements objectAtIndex:indexPath.row];
     if ([obj isKindOfClass:[PermissiveCoreDataObject class]]) {
         PermissiveCoreDataObject *permissiveObj = (PermissiveCoreDataObject *)obj;
         NSLog(@"You call load your ManagedObject using permissiveObj.objectID with your mainThread context");
@@ -162,7 +162,7 @@
         //PermissiveCoreDataObject *permissiveObj = (PermissiveCoreDataObject *)obj;
         //NSLog(@"You call load your ManagedObject using permissiveObj.objectID with your mainThread context");
         
-        self.findedElements = results;
+        self.foundElements = results;
         [self.tableView reloadData];
         NSLog(@"End search by matrix");
     });

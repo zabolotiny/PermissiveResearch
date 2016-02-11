@@ -15,7 +15,7 @@
 #define JMOLog(...)
 #endif
 
-typedef void (^SearchCompletionBlock)(NSArray *findedElements);
+typedef void (^SearchCompletionBlock)(NSArray *foundElements);
 
 typedef enum {
     ScoringOperationTypeExact,

@@ -12,7 +12,7 @@
 @interface PermissiveAbstractObject : NSObject
 
 @property (assign, nonatomic) char *flag;
-@property (assign, nonatomic) short flagLenght;
+@property (assign, nonatomic) short flagLength;
 @property (assign, nonatomic) short score;
 
 @end

@@ -11,7 +11,7 @@
 
 #import "PermissiveResearch.h"
 
-#define ScoringSegmentLenght 3
+#define ScoringSegmentLength 3
 
 @interface PermissiveResearchDatabase : NSObject
 
