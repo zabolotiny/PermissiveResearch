@@ -1,0 +1,5 @@
+PermissiveResearch/.DS_Store
+
+# Ignore InterfaceState
+PermissiveResearch/PermissiveResearch.xcodeproj/project.xcworkspace/xcuserdata/*
+PermissiveResearch/PermissiveResearch.xcodeproj/xcuserdata/*
