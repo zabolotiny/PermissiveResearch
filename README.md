@@ -10,23 +10,25 @@
 PermissiveResearch
 ==================
 
-An iOS search engine that allows mistakes in the searched element in huge data.
-Many developpers would have executed a fectch request on a CoreData database or a predicate to filter on a NSArray.
+A performant iOS search engine that supports fuzzy matching (or approximate string matching), ie the ability to return matches that may be less than 100% accurate; it helps make searches tolerant to typographic errors / approximations.
+
+It replaces CoreData fetch requests or NSArray filters with predicate.
 
 ![Image](demo.png)
 
 PermissiveResearch is a alternative to simplify the search step.
-Advantages : 
-- No more problems with CoreData (context/thread),
-- Performances,
-- 100% resusable for each projects that need to perform analysis in huge data,
-- Search algorithm are easy customizable,
-- 3 algorithms already implemented, 
+Advantages :
+- Fast (see performances below),
+- Easy to implement with any existing data and without modifying any existing data model,
+- Manages CoreData context/threads CoreData for you,
+- Handle huge datasets,
+- Search algorithm can be customized easily,
+- 3 algorithms already implemented.
 
-### Performances (on iphone4, searchig in 5000 objects 4 properties)
+### Performances (on iPhone4, searching in 4 properties amongst 5.000 objects)
 
-|  Type of search  | time (ms) | data structure | 
-| ------------- |:-------------:| -------------| 
+|  Type of search  | time (ms) | data structure |
+| ------------- |:-------------:| -------------|
 |  Exact search  | 200 | Using predicates      |
 |  Exact search  | 2800 | Using PermissiveResearch (ExactScoringOperation*)   |
 |  Exact search  | 100 | Using PermissiveResearch (HeuristicScoringOperation*)  |
@@ -83,7 +85,7 @@ Example :
     id json = [NSJSONSerialization JSONObjectWithData:data
                                               options:kNilOptions
                                                 error:&error];
-    
+
     [[PermissiveResearchDatabase sharedDatabase] addObjects:json forKeyPaths:@[@"name",@"gender",@"company",@"email"]];
     self.searchedList = json;
 }
@@ -94,7 +96,7 @@ Example :
 -(NSInteger)customCostForEvent:(ScoringEvent)event
 ```
 
-Example (default values) : 
+Example (default values) :
 ```objective-c
 -(NSInteger)customCostForEvent:(ScoringEvent)event
 {
@@ -102,23 +104,23 @@ Example (default values) :
         case ScoringEventPerfectMatch:
             return 2;
             break;
-           
+
         case ScoringEventNotPerfectMatchKeyboardAnalyseHelp:
             return 1;
             break;
-            
+
         case ScoringEventNotPerfectBecauseOfAccents:
             return 2;
             break;
-            
+
         case ScoringEventLetterAddition:
             return -1;
             break;
-            
+
         default:
             break;
     }
-    
+
     return NSNotFound;
 }
 ```
@@ -129,13 +131,13 @@ Example (default values) :
 
 [[PermissiveResearchDatabase sharedDatabase] setDelegate:self];
 [[PermissiveResearchDatabase sharedDatabase] searchString:searchedString withOperation:ScoringOperationTypeExact];
-    
+
 #pragma mark PermissiveResearchDelegate
 
 -(void)searchCompletedWithResults:(NSArray *)results
 {
     dispatch_async(dispatch_get_main_queue(), ^{
-        self.findedElements = results;
+        self.foundElements = results;
         [self.tableView reloadData];
     });
 }
@@ -147,21 +149,21 @@ Example (default values) :
     [[ScoringOperationQueue mainQueue] cancelAllOperations]
     HeuristicScoringOperation *ope = [[HeuristicScoringOperation alloc] init];
     ope.searchedString = searchedString;
-    
+
     SearchCompletionBlock block = ^(NSArray *results) {
         dispatch_async(dispatch_get_main_queue(), ^{
-            self.findedElements = results;
-            NSLog(@"finded elements %@", results);
+            self.foundElements = results;
+            NSLog(@"Found elements: %@", results);
         });
     };
-    
+
     [ope setCustomCompletionBlock:block];
     [[ScoringOperationQueue mainQueue] addOperation:ope];
 
 ```
 
-### Actualy 3 operations are available, usage depends on the performance you need. 
-Algorithms complexities are very differents.
+### Actually 3 operations are available, usage depends on the performance you need.
+Algorithms complexities are very different.
 HeuristicScoringOperation < HeurexactScoringOperation << ExactScoringOperation
 
 ```objective-c
@@ -171,6 +173,4 @@ HeurexactScoringOperation
 ```
 
 ### TODO
-- Tolerate keyboard errors, very proximal letters can be tolerate.
-
-
+- Improve keyboard errors tolerance (when a letter is replace by one of its neighbors)
