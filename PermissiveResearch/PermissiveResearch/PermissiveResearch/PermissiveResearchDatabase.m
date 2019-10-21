@@ -288,7 +288,9 @@ static PermissiveResearchDatabase *mainDatabase = nil;
 
 #pragma mark - Search methods
 
-- (void)searchString:(NSString *)searchedString withOperation:(ScoringOperationType)operationType
+- (void)searchString:(NSString *)searchedString
+ withOperation:(ScoringOperationType)operationType
+onlyAccessible:(BOOL)shouldBeAccessibleOnly
 {
     [[ScoringOperationQueue mainQueue] cancelAllOperations];
     
@@ -303,6 +305,7 @@ static PermissiveResearchDatabase *mainDatabase = nil;
         operation = [HeurexactScoringOperation new];
     }
     
+    operation.shouldBeOnlyAccessible = shouldBeAccessibleOnly;
     operation.searchedString = searchedString;
     SearchCompletionBlock block = ^(NSArray *results) {
         if ([self.delegate respondsToSelector:@selector(searchCompletedWithResults:)]) {

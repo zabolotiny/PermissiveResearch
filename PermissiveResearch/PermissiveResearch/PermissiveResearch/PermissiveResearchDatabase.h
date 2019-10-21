@@ -11,7 +11,7 @@
 
 #import "PermissiveResearch.h"
 
-#define ScoringSegmentLength 3
+#define ScoringSegmentLength 2
 
 @interface PermissiveResearchDatabase : NSObject
 
@@ -54,6 +54,8 @@
 - (void)addManagedObject:(NSManagedObject *)obj forKey:(NSString *)key withValue:(NSString *)value;
 
 - (NSMutableSet *)objectsForSegment:(NSString *)key;
-- (void)searchString:(NSString *)searchedString withOperation:(ScoringOperationType)operationType;
+- (void)searchString:(NSString *)searchedString
+ withOperation:(ScoringOperationType)operationType
+onlyAccessible:(BOOL)shouldBeAccessibleOnly;
 
 @end

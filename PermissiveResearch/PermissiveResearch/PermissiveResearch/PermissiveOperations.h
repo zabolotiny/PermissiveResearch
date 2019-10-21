@@ -33,6 +33,7 @@ typedef enum {
 @interface ExactScoringOperation : NSOperation
 
 @property (strong, nonatomic) NSString *searchedString;
+@property (assign) BOOL shouldBeOnlyAccessible;
 @property (nonatomic, copy) SearchCompletionBlock customCompletionBlock;
 
 @end

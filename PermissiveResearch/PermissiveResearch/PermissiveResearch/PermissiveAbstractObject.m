@@ -9,5 +9,8 @@
 #import "PermissiveAbstractObject.h"
 
 @implementation PermissiveAbstractObject
+- (NSString*) keyString {
+    return [[NSString alloc] initWithUTF8String:self.flag];
+}
 
 @end

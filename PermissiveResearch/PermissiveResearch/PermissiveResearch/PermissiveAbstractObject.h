@@ -14,5 +14,6 @@
 @property (assign, nonatomic) char *flag;
 @property (assign, nonatomic) short flagLength;
 @property (assign, nonatomic) short score;
+@property (readonly, nonatomic) NSString *keyString;
 
 @end

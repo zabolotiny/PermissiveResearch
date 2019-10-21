@@ -62,7 +62,7 @@
         
         NSArray *foundElements;
         NSSortDescriptor *sortDescriptor = [[NSSortDescriptor alloc] initWithKey:@"score" ascending:NO];
-
+        
         //Sorting
         if ([PermissiveResearchDatabase sharedDatabase].elements.count > 20) {
             foundElements = [[[PermissiveResearchDatabase sharedDatabase].elements sortedArrayUsingDescriptors:@[sortDescriptor]] subarrayWithRange:NSMakeRange(0, 20)];
@@ -112,13 +112,29 @@
         }
         
         JMOLog(@"Searching %@ in %d elements", self.searchedString,(int)[PermissiveResearchDatabase sharedDatabase].elements.count);
-        [[PermissiveResearchDatabase sharedDatabase].elements enumerateObjectsUsingBlock:^(PermissiveAbstractObject *obj, BOOL *stop) {
+        [[PermissiveResearchDatabase sharedDatabase].elements enumerateObjectsUsingBlock:^(PermissiveObject *obj, BOOL *stop) {
             obj.score = 0;
+            if (!obj.refencedObject.isAvailibleForUser && self.shouldBeOnlyAccessible) {
+                obj.score = -100;
+            }
         }];
+        
+        const char *searchTermUTF8 = [self.searchedString UTF8String];
         
         for (int i = 0; i <= self.searchedString.length - ScoringSegmentLength; i++) {
             NSString *segment = [self.searchedString substringWithRange:NSMakeRange(i, ScoringSegmentLength)];
+            const char *segmentUTF8 = [segment UTF8String];
             [[[PermissiveResearchDatabase sharedDatabase] objectsForSegment:segment] enumerateObjectsUsingBlock:^(PermissiveAbstractObject *obj, BOOL *stop) {
+                // increase score for string starting from first component by 2
+                if (i == 0 &&
+                    strncasecmp(segmentUTF8, obj.flag, strlen(segmentUTF8)) == 0) {
+                    obj.score = obj.score + 2;
+                }
+                // increase score for string starting from searchquery by 2
+                if (i == 0 &&
+                    strncasecmp(searchTermUTF8, obj.flag, strlen(searchTermUTF8)) == 0) {
+                    obj.score = obj.score + 1;
+                }
                 obj.score++;
             }];
         }
@@ -127,29 +143,96 @@
             return;
         
         JMOLog(@"Searching -> Done ");
-    
+        
         NSArray *foundElements;
-        NSSortDescriptor *sortDescriptor = [[NSSortDescriptor alloc] initWithKey:@"score" ascending:NO];
         //Sorting
-        if ([PermissiveResearchDatabase sharedDatabase].elements.count > 20) {
-            foundElements = [[[PermissiveResearchDatabase sharedDatabase].elements sortedArrayUsingDescriptors:@[sortDescriptor]] subarrayWithRange:NSMakeRange(0, 20)];
-        } else {
-            foundElements = [[PermissiveResearchDatabase sharedDatabase].elements sortedArrayUsingDescriptors:@[sortDescriptor]];
-        }
-
-        //LOG MAX
-        if (foundElements.count > 0) {
-            NSUInteger taille = self.searchedString.length;
-            PermissiveAbstractObject *obj = [foundElements objectAtIndex:0];
-            logCalculatedMatrix([self.searchedString UTF8String], obj.flag, (int)taille, obj.flagLength, [PermissiveScoringMatrix sharedScoringMatrix].structRepresentation);
+        NSSortDescriptor *scoreSortDescriptor = [[NSSortDescriptor alloc] initWithKey:@"score" ascending:NO];
+        NSSortDescriptor *ratingSortDescriptor = [[NSSortDescriptor alloc] initWithKey:@"refencedObject.rating" ascending:NO];
+        NSSortDescriptor *typeSortDescriptor = [[NSSortDescriptor alloc] initWithKey:@"refencedObject.type" ascending:NO];
+        NSSortDescriptor *flagSortDescriptor = [[NSSortDescriptor alloc] initWithKey:@"keyString" ascending:YES];
+        
+        //Increase score in order to get exact matches
+        [[PermissiveResearchDatabase sharedDatabase].elements enumerateObjectsUsingBlock:^(PermissiveObject*  _Nonnull obj, BOOL * _Nonnull stop) {
+            if(strstr(obj.flag, searchTermUTF8) != NULL) {
+                obj.score++;
+            }
+        }];
+        
+        foundElements = [[PermissiveResearchDatabase sharedDatabase].elements sortedArrayUsingDescriptors:@[scoreSortDescriptor, ratingSortDescriptor, flagSortDescriptor]];
+        NSInteger maxElementsPerType = 3;
+        NSMutableDictionary *addedQtyForEachType = [NSMutableDictionary new];
+        
+        // get 3 items for each group
+        NSMutableArray *resultingArray = [NSMutableArray new];
+        
+        //LIX exception - while lix is entered then search should be made through lix only
+        NSInteger exceptionType = 0;
+        if ([self.searchedString.lowercaseString hasPrefix:@"lix"]) {
+            exceptionType = 4;
+            maxElementsPerType = 9999;
+            [foundElements enumerateObjectsUsingBlock:^(PermissiveObject*  _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+                if (obj.score < 1) {
+                    return;
+                }
+                // tag type should have at least 2 scores
+                if (obj.refencedObject.type == 4 && obj.score < 2) {
+                    return;
+                }
+                // add exception group items
+                if (exceptionType == obj.refencedObject.type) {
+                    [self testDigitsForExceptionCategory:obj andSearchQuery:self.searchedString];
+                    [resultingArray addObject:obj];
+                    return;
+                }
+                // contine if exception is present
+                if (exceptionType > 0) {
+                    return;
+                }
+                NSString *keyType = @(obj.refencedObject.type).description;
+                NSNumber *recordedQty = addedQtyForEachType[keyType];
+                if (recordedQty.integerValue >= maxElementsPerType) {
+                    return;
+                }
+                [resultingArray addObject:obj];
+                NSNumber *newQty = @(recordedQty.integerValue + 1);
+                addedQtyForEachType[keyType] = newQty;
+            }];
             
-        }
-
-        if(self.customCompletionBlock) {
-            self.customCompletionBlock(foundElements);
+            [resultingArray sortUsingDescriptors:@[typeSortDescriptor, scoreSortDescriptor, ratingSortDescriptor, flagSortDescriptor]];
+            
+            //LOG MAX
+            if (resultingArray.count > 0) {
+                NSUInteger taille = self.searchedString.length;
+                PermissiveAbstractObject *obj = [resultingArray objectAtIndex:0];
+                logCalculatedMatrix([self.searchedString UTF8String], obj.flag, (int)taille, obj.flagLength, [PermissiveScoringMatrix sharedScoringMatrix].structRepresentation);
+                
+            }
+            
+            if(self.customCompletionBlock) {
+                self.customCompletionBlock(resultingArray);
+            }
         }
     }
 }
+
+/**
+ In order to see in resulting array LIX03 for request lix 3 we need to give more scores for digit matched in string.
+ */
+- (void)testDigitsForExceptionCategory:(PermissiveObject*) obj
+                        andSearchQuery:(NSString*) searchQuery {
+    NSString
+    *stringDigitsInKey = obj.keyString ? [[obj.keyString componentsSeparatedByCharactersInSet:
+                                           [[NSCharacterSet decimalDigitCharacterSet] invertedSet]]
+                                          componentsJoinedByString:@""] : @"";
+    NSString *stringDigitsInQuery = searchQuery ? [[searchQuery componentsSeparatedByCharactersInSet:
+                                                    [[NSCharacterSet decimalDigitCharacterSet] invertedSet]]
+                                                   componentsJoinedByString:@""] : @"";
+    if (stringDigitsInKey.integerValue == stringDigitsInQuery.integerValue &&
+        stringDigitsInKey.integerValue > 0) {
+        obj.score = obj.score + 3;
+    }
+}
+
 @end
 
 

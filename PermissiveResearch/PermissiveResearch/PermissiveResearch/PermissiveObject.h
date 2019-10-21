@@ -7,9 +7,17 @@
 //
 
 #import "PermissiveAbstractObject.h"
+@protocol PermissiveRelativeObjectProtocol <NSObject>
+
+@property (nonatomic, assign) double rating;
+@property (nonatomic, assign) NSInteger type;
+@property (nonatomic, assign) BOOL isAvailibleForUser;
+
+
+@end
 
 @interface PermissiveObject : PermissiveAbstractObject
 
-@property (strong, nonatomic) id refencedObject;
+@property (strong, nonatomic) id<PermissiveRelativeObjectProtocol> refencedObject;
 
 @end
