@@ -117,7 +117,7 @@
         JMOLog(@"Searching %@ in %d elements", self.searchedString,(int)[PermissiveResearchDatabase sharedDatabase].elements.count);
         [[PermissiveResearchDatabase sharedDatabase].elements enumerateObjectsUsingBlock:^(PermissiveObject *obj, BOOL *stop) {
             obj.score = 0;
-            if (!obj.refencedObject.isAvailibleForUser && self.shouldBeOnlyAccessible) {
+            if (!obj.refencedObject.isAvailibleForUser && self.shouldBeOnlyAccessible && obj.refencedObject.type == 4) {
                 obj.score = -100;
             }
         }];
@@ -320,6 +320,7 @@
         }
     }
 }
+
 
 @end
 

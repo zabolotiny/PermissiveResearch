@@ -266,6 +266,8 @@ static PermissiveResearchDatabase *mainDatabase = nil;
     
     for (int i = 0; i < key.length - ScoringSegmentLength; i++) {
         NSString *segment = [key substringWithRange:NSMakeRange(i, ScoringSegmentLength)];
+        segment = [segment stringByFoldingWithOptions:NSDiacriticInsensitiveSearch locale:[NSLocale localeWithLocaleIdentifier:@"en_US"]];
+
         [self addSegment:segment forObject:obj];
     }
 }
@@ -306,7 +308,7 @@ onlyAccessible:(BOOL)shouldBeAccessibleOnly
     }
     
     operation.shouldBeOnlyAccessible = shouldBeAccessibleOnly;
-    operation.searchedString = searchedString;
+    operation.searchedString = [searchedString stringByFoldingWithOptions:NSDiacriticInsensitiveSearch locale:[NSLocale localeWithLocaleIdentifier:@"en_US"]];
     SearchCompletionBlock block = ^(NSArray *results) {
         if ([self.delegate respondsToSelector:@selector(searchCompletedWithResults:)]) {
             [self.delegate searchCompletedWithResults:results];
