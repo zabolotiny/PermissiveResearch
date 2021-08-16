@@ -134,10 +134,10 @@
                     obj.score = obj.score + 2;
                 }
                 // increase score for string starting from searchquery by 2
-                    if (i == 0 &&
-                        strncasecmp(searchTermUTF8, obj.flag, strlen(searchTermUTF8)) == 0) {
-                        obj.score = obj.score + 1;
-                    }
+                if (i == 0 &&
+                    strncasecmp(searchTermUTF8, obj.flag, strlen(searchTermUTF8)) == 0) {
+                    obj.score = obj.score + 1;
+                }
                 obj.score++;
             }];
         }
@@ -158,6 +158,10 @@
         [[PermissiveResearchDatabase sharedDatabase].elements enumerateObjectsUsingBlock:^(PermissiveObject*  _Nonnull obj, BOOL * _Nonnull stop) {
             if(strstr(obj.flag, searchTermUTF8) != NULL) {
                 obj.score++;
+            }
+            //Add higher rank to 100% match
+            if(strstr(obj.flag, searchTermUTF8) != NULL && strlen(obj.flag) == strlen(searchTermUTF8)) {
+                obj.score = obj.score + 100;
             }
         }];
         
@@ -202,7 +206,7 @@
             addedQtyForEachType[keyType] = newQty;
         }];
         
-        [resultingArray sortUsingDescriptors:@[typeSortDescriptor, scoreSortDescriptor, ratingSortDescriptor, flagSortDescriptor]];
+        [resultingArray sortUsingDescriptors:@[scoreSortDescriptor, ratingSortDescriptor, flagSortDescriptor]];
         
         //LOG MAX
         if (resultingArray.count > 0) {
